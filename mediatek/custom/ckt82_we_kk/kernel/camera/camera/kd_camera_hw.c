@@ -181,7 +181,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMRST],pinSet[0][IDX_PS_CMRST+IDX_PS_OFF])){PK_DBG("[CAMERA SENSOR] set gpio failed!! \n");} //low == reset sensor
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMPDN],pinSet[0][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
 	        }
-#if 0
 	        if (GPIO_CAMERA_INVALID != pinSet[2][IDX_PS_CMRST]) {
                /*
 	            if(mt_set_gpio_mode(pinSet[2][IDX_PS_CMRST],pinSet[2][IDX_PS_CMRST+IDX_PS_MODE])){PK_DBG("[CAMERA SENSOR] set gpio mode failed!! \n");}
@@ -192,7 +191,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[2][IDX_PS_CMPDN],pinSet[2][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
                */
 	        }
-#endif
 		}
 
 	}
@@ -293,7 +291,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMRST],pinSet[0][IDX_PS_CMRST+IDX_PS_OFF])){PK_DBG("[CAMERA SENSOR] set gpio failed!! \n");} //low == reset sensor
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMPDN],pinSet[0][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
 	        }
-#if 0
 	        if (GPIO_CAMERA_INVALID != pinSet[2][IDX_PS_CMRST]) {
 				//PK_DBG("kdCISModulePowerOn 8AA close index[2]\n");
 				
@@ -305,7 +302,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[2][IDX_PS_CMPDN],pinSet[2][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
                 */
 	        }
-#endif
 		}
 		mdelay(50);
 	}
@@ -401,7 +397,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMRST],pinSet[0][IDX_PS_CMRST+IDX_PS_OFF])){PK_DBG("[CAMERA SENSOR] set gpio failed!! \n");} //low == reset sensor
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMPDN],pinSet[0][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
 	        }
-#if 0
 	        if (GPIO_CAMERA_INVALID != pinSet[2][IDX_PS_CMRST]) {
 				//PK_DBG("kdCISModulePowerOn 8AA close index[2]\n");
 				
@@ -413,7 +408,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[2][IDX_PS_CMPDN],pinSet[2][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
                 */
 	        }
-#endif
 		}
 	}
     else if (currSensorName && (0 == strcmp(SENSOR_DRVNAME_A5142_MIPI_RAW, currSensorName)))
@@ -615,7 +609,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMRST],pinSet[0][IDX_PS_CMRST+IDX_PS_OFF])){PK_DBG("[CAMERA SENSOR] set gpio failed!! \n");} //low == reset sensor
 	            if(mt_set_gpio_out(pinSet[0][IDX_PS_CMPDN],pinSet[0][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
 	        }
-#if 0
 	        if (GPIO_CAMERA_INVALID != pinSet[2][IDX_PS_CMRST]) {
 	            /*if(mt_set_gpio_mode(pinSet[2][IDX_PS_CMRST],pinSet[2][IDX_PS_CMRST+IDX_PS_MODE])){PK_DBG("[CAMERA SENSOR] set gpio mode failed!! \n");}
 	            if(mt_set_gpio_mode(pinSet[2][IDX_PS_CMPDN],pinSet[2][IDX_PS_CMPDN+IDX_PS_MODE])){PK_DBG("[CAMERA LENS] set gpio mode failed!! \n");}
@@ -625,7 +618,6 @@ u32 pinSet[2][8] = {
 	            if(mt_set_gpio_out(pinSet[2][IDX_PS_CMPDN],pinSet[2][IDX_PS_CMPDN+IDX_PS_OFF])){PK_DBG("[CAMERA LENS] set gpio failed!! \n");} //high == power down lens module
                 */
 	        }
-#endif
 		}
     }
   }

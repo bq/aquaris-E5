@@ -177,7 +177,7 @@ CUSTOM_KERNEL_USB=mt6577
 CUSTOM_KERNEL_VIBRATOR=vibrator
 
 # To choose LK LCM driver name
-CUSTOM_LK_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
+CUSTOM_LK_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma hx8394d_hd720_dsi_vdo_truly
 
 # add for factory mmi test
 CUSTOM_MMI_TEST = yes
@@ -291,7 +291,7 @@ MTK_3GDONGLE_SUPPORT=no
 
 # yes: enable this feature
 # no: disable this feature
-MTK_AAL_SUPPORT=no
+MTK_AAL_SUPPORT=yes
 
 # For ACMT DEUG use
 MTK_ACMT_DEBUG=no
@@ -656,7 +656,7 @@ MTK_DVFS_DISABLE_LOW_VOLTAGE_SUPPORT=yes
 MTK_DX_HDCP_SUPPORT=no
 
 # if this feature option is enabled, then Android OS support eap-sim and eap-aka authentication when using Wi-Fi.
-MTK_EAP_SIM_AKA=no
+MTK_EAP_SIM_AKA=yes
 
 # yes: enable
 # no:  disable
@@ -1581,10 +1581,10 @@ MTK_HDMI_SUPPORT=no
 BOOT_LOGO=cu_hd720
 
 # To choose kernel LCM driver name
-CUSTOM_KERNEL_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
+CUSTOM_KERNEL_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma hx8394d_hd720_dsi_vdo_truly
 
 # To choose uboot LCM driver name
-CUSTOM_UBOOT_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
+CUSTOM_UBOOT_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma hx8394d_hd720_dsi_vdo_truly
 
 # To set LCM resolution height size
 LCM_HEIGHT=1280

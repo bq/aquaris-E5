@@ -491,7 +491,7 @@ static int L3GD20_SetPowerMode(struct i2c_client *client, bool enable)
 
 	sensor_power = enable;
 
-
+    msleep(200); // 确保状态改变后,gyro稳定 苏 勇 2014年07月21日 17:55:52
 	return L3GD20_SUCCESS;
 }
 

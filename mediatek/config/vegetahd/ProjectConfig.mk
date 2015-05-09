@@ -177,7 +177,7 @@ CUSTOM_KERNEL_USB=mt6577
 CUSTOM_KERNEL_VIBRATOR=vibrator
 
 # To choose LK LCM driver name
-CUSTOM_LK_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma hx8394d_hd720_dsi_vdo_truly
+CUSTOM_LK_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
 
 # add for factory mmi test
 CUSTOM_MMI_TEST = yes
@@ -291,7 +291,7 @@ MTK_3GDONGLE_SUPPORT=no
 
 # yes: enable this feature
 # no: disable this feature
-MTK_AAL_SUPPORT=yes
+MTK_AAL_SUPPORT=no
 
 # For ACMT DEUG use
 MTK_ACMT_DEBUG=no
@@ -1581,10 +1581,10 @@ MTK_HDMI_SUPPORT=no
 BOOT_LOGO=cu_hd720
 
 # To choose kernel LCM driver name
-CUSTOM_KERNEL_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma hx8394d_hd720_dsi_vdo_truly
+CUSTOM_KERNEL_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
 
 # To choose uboot LCM driver name
-CUSTOM_UBOOT_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma hx8394d_hd720_dsi_vdo_truly
+CUSTOM_UBOOT_LCM=hx8394_hd720_dsi_vdo_truly otm1285a_hd720_dsi_vdo_tianma
 
 # To set LCM resolution height size
 LCM_HEIGHT=1280

@@ -31,7 +31,7 @@
 #include <linux/mrdump.h>
 
 #define SERIALNO_LEN 32
-char serial_number[SERIALNO_LEN];
+static char serial_number[SERIALNO_LEN];
 
 extern BOOTMODE get_boot_mode(void);
 extern u32 get_devinfo_with_index(u32 index);
@@ -1079,22 +1079,6 @@ static int __init parse_tag_devinfo_data_fixup(const struct tag *tags)
 }
 
 extern unsigned int mtkfb_parse_dfo_setting(void *dfo_tbl, int num);
-int indexOf(char *str1,char *str2)  //dongyin
-{  
-    char *p=str1;  
-    int i=0;  
-    p=strstr(str1,str2);  
-    if(p==NULL)  
-        return -1;  
-    else{  
-        while(str1!=p)  
-        {  
-            str1++;  
-            i++;  
-        }  
-    }  
-    return i;  
-}  
 
 void mt_fixup(struct tag *tags, char **cmdline, struct meminfo *mi)
 {
@@ -1296,17 +1280,6 @@ void mt_fixup(struct tag *tags, char **cmdline, struct meminfo *mi)
 			/* get boot reason */
 			g_boot_reason = br_ptr[12] - '0';
 		}
-
-       cmdline_filter(cmdline_tag, *cmdline);
-		if ((br_ptr = strstr(*cmdline, "androidboot.serialno=")) != 0) {
-			int endindex=indexOf(br_ptr, " ");
-			memcpy(serial_number,  &br_ptr[21], endindex-21);
-		}
-		if((serial_number == NULL) || (strlen(serial_number) == 0))
-	       {
-	           memcpy(serial_number, "0123456789ABCDEF", 16);
-	       }
-		
         /* Use the default cmdline */
         memcpy((void*)cmdline_tag,
                (void*)tag_next(cmdline_tag),
@@ -1550,9 +1523,10 @@ __init int mt_board_init(void)
 #else
 		key = 0;
 #endif
-		if (key != 0){
+		if (key != 0)
 			get_serial(key, get_chip_code(), serial_number);
-                }
+		else
+			memcpy(serial_number, "0123456789ABCDEF", 16);
 
 		retval = kobject_init_and_add(&sn_kobj, &sn_ktype, NULL, "sys_info");
 

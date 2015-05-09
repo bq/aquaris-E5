@@ -7,7 +7,7 @@ pow:
 
 .LFilterRange:
     movw            ip, #0x0000
-    movt            ip, #0x4010
+    movt            ip, #0x4030
     vmov            d1, r2, r3
     cmp             r1, ip
     cmple           r3, ip

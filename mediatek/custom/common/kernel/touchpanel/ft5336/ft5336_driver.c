@@ -785,7 +785,7 @@ static unsigned char CTPM_FW[]=
 #elif defined(KRILLIN)
 static unsigned char CTPM_FW[]=
 {
-#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x15_20140618_app.i"
+#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x14_20140529_app.i"
 };
 #endif
 
@@ -2385,7 +2385,7 @@ static ssize_t store_control_double_tap(struct device *dev,struct device_attribu
 }
 
 
-static DEVICE_ATTR(control_double_tap, 0664, show_control_double_tap, store_control_double_tap);
+static DEVICE_ATTR(control_double_tap, 0666, show_control_double_tap, store_control_double_tap);
 #endif
 
 static const struct device_attribute * const ctp_attributes[] = {

@@ -69,10 +69,21 @@
 #define FG_VBAT_AVERAGE_SIZE 18
 #define R_FG_VALUE 			0 // mOhm, base is 20
 
+/*code changed by fangming.yang to resolve VEGETA-1967 bug*/
+#if 0
 #define CUST_POWERON_DELTA_CAPACITY_TOLRANCE	60
 #define CUST_POWERON_LOW_CAPACITY_TOLRANCE		5
 #define CUST_POWERON_MAX_VBAT_TOLRANCE			90
 #define CUST_POWERON_DELTA_VBAT_TOLRANCE		20
+#else
+#define CUST_POWERON_DELTA_CAPACITY_TOLRANCE	5
+#define CUST_POWERON_DELTA_CAPACITY_TOLRANCE_EXT 60
+#define CUST_POWERON_LOW_CAPACITY_TOLRANCE		5
+#define CUST_POWERON_MAX_VBAT_TOLRANCE			90
+#define CUST_POWERON_DELTA_VBAT_TOLRANCE		20
+#endif
+/*code changed end 2014.10.08 pm 16:00*/
+
 
 /* Disable Battery check for HQA */
 #ifdef MTK_DISABLE_POWER_ON_OFF_VOLTAGE_LIMITATION
@@ -82,8 +93,15 @@
 /* Dynamic change wake up period of battery thread when suspend*/
 #define VBAT_NORMAL_WAKEUP		3600		//3.6V
 #define VBAT_LOW_POWER_WAKEUP		3500		//3.5v
-#define NORMAL_WAKEUP_PERIOD		5400 		//90 * 60 = 90 min
-#define LOW_POWER_WAKEUP_PERIOD		300		//5 * 60 = 5 min
+#define NORMAL_WAKEUP_PERIOD		300 		//5 * 60 = 5 min
+#define LOW_POWER_WAKEUP_PERIOD		180		//3 * 60 = 3 min
 #define CLOSE_POWEROFF_WAKEUP_PERIOD	30	//30 s
+
+/*code added by fangming.yang to resolve VEGETA-1967 bug*/
+#define VOLTAGE_INIT_COMPENSATE_NO_CHARGER 6//negative compensate value
+#define VOLTAGE_INIT_COMPENSATE_CHARGER 3//negative compensate value
+#define VOLTAGE_INIT_GDOD_OFFSET 10//
+
+/*code added end 2014.10.08 pm 16:00*/
 
 #endif	//#ifndef _CUST_BATTERY_METER_H

@@ -4,7 +4,7 @@
 /* stop charging while in talking mode */
 #define STOP_CHARGING_IN_TAKLING
 #define TALKING_RECHARGE_VOLTAGE 3800
-#define TALKING_SYNC_TIME		   60
+#define TALKING_SYNC_TIME		   30//60
 
 /* High battery support */
 #define HIGH_BATTERY_VOLTAGE_SUPPORT
@@ -44,7 +44,7 @@
 #define AC_LESS_N_DEGRESS_CHARGER_CURRENT	CHARGE_CURRENT_200_00_MA  //< 200mA
 #endif
 #define MAX_CHARGE_NOTIFY_TEMPERATURE 55				//高温报警温度
-#define MIN_CHARGE_NOTIFY_TEMPERATURE -20				//低温报警温度
+#define MIN_CHARGE_NOTIFY_TEMPERATURE -10				//低温报警温度
 
 #define MAX_CHARGE_POWEROFF_TEMPERATURE 60	//高温自动掉电温度
 #define MIN_CHARGE_POWEROFF_TEMPERATURE -30	
@@ -88,7 +88,7 @@
 //#define BAT_LOW_TEMP_PROTECT_ENABLE         // stop charging if temp < MIN_CHARGE_TEMPERATURE
 #endif
 #define V_CHARGER_ENABLE 0				// 1:ON , 0:OFF	
-#define V_CHARGER_MAX 6000				// 6.5 V
+#define V_CHARGER_MAX 6000				// 6.0 V
 #define V_CHARGER_MIN 4400				// 4.4 V
 
 /* Tracking TIME */

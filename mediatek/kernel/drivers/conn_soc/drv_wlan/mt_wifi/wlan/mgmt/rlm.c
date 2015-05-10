@@ -526,9 +526,9 @@ rlmReqGenerateExtCapIE (
         rlmFillExtCapIE(prAdapter, prBssInfo, prMsduInfo);
     }
 #if CFG_SUPPORT_HOTSPOT_2_0
-	else {
-		hs20FillExtCapIE(prAdapter, prBssInfo, prMsduInfo);
-	}
+    else if(prAdapter->prGlueInfo->fgConnectHS20AP == TRUE) {
+        hs20FillExtCapIE(prAdapter, prBssInfo, prMsduInfo);
+    }
 #endif
 }
 
@@ -811,7 +811,15 @@ rlmFillExtCapIE (
                (((PUINT_8) prMsduInfo->prPacket) + prMsduInfo->u2FrameLength);
 
     prExtCap->ucId = ELEM_ID_EXTENDED_CAP;
-    prExtCap->ucLength = ELEM_MAX_LEN_EXT_CAP;
+#if CFG_SUPPORT_HOTSPOT_2_0
+    if (prAdapter->prGlueInfo->fgConnectHS20AP == TRUE)
+        prExtCap->ucLength = ELEM_MAX_LEN_EXT_CAP;
+    else
+#endif
+        prExtCap->ucLength = 3 - ELEM_HDR_LEN;
+
+    kalMemZero(prExtCap->aucCapabilities, prExtCap->ucLength);
+
     prExtCap->aucCapabilities[0] = ELEM_EXT_CAP_DEFAULT_VAL;
 
     if (!fg40mAllowed) {
@@ -822,11 +830,13 @@ rlmFillExtCapIE (
         prExtCap->aucCapabilities[0] &= ~ELEM_EXT_CAP_PSMP_CAP;
     }
 
- #if CFG_SUPPORT_HOTSPOT_2_0
-	SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_INTERWORKING_BIT);
+#if CFG_SUPPORT_HOTSPOT_2_0
+    if (prAdapter->prGlueInfo->fgConnectHS20AP == TRUE) {
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_INTERWORKING_BIT);
 
-	// For R2 WNM-Notification
-	SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_WNM_NOTIFICATION_BIT);
+        /* For R2 WNM-Notification*/
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_WNM_NOTIFICATION_BIT);
+    }
 #endif
 
     ASSERT(IE_SIZE(prExtCap) <= (ELEM_HDR_LEN + ELEM_MAX_LEN_EXT_CAP));

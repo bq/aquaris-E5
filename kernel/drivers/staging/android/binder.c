@@ -64,7 +64,7 @@ static int binder_last_id;
 static struct workqueue_struct *binder_deferred_workqueue;
 static pid_t system_server_pid;
 
-#define RT_PRIO_INHERIT			"v1.7"
+//#define RT_PRIO_INHERIT			"v1.7"
 
 #define MTK_BINDER_DEBUG 		"v0.1" /* defined for mtk internal added debug code */
 

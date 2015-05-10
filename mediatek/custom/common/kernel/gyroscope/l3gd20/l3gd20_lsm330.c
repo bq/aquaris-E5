@@ -801,7 +801,9 @@ static int L3GD20_SelfTest(struct i2c_client *client)
 	// 2 check ZYXDA bit
 	hwmsen_read_byte(client,L3GD20_STATUS_REG,&data);
 	GYRO_LOG("L3GD20_STATUS_REG=%d\n",data );
-	while(0x04 != (data&0x04))
+// 这里就不检查状态寄存器了,检查其实作用不大,更重要的是下面的循环中data一旦赋值就不会变化,
+// 那么实际上就可能是永远不会退出了 苏 勇 2014年07月22日 18:15:02
+// 苏 勇 2014年07月22日 18:14:12	while(0x04 != (data&0x04))
 	{
 	  msleep(10);
 	}

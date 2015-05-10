@@ -154,9 +154,12 @@ hs20FillExtCapIE (
                (((PUINT_8) prMsduInfo->prPacket) + prMsduInfo->u2FrameLength);
 
     prExtCap->ucId = ELEM_ID_EXTENDED_CAP;
-    prExtCap->ucLength = ELEM_MAX_LEN_EXT_CAP;
+    if (prAdapter->prGlueInfo->fgConnectHS20AP == TRUE)
+        prExtCap->ucLength = ELEM_MAX_LEN_EXT_CAP;
+    else
+        prExtCap->ucLength = 3 - ELEM_HDR_LEN;
 
-    kalMemZero(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP);
+    kalMemZero(prExtCap->aucCapabilities, prExtCap->ucLength);
 
     prExtCap->aucCapabilities[0] = ELEM_EXT_CAP_DEFAULT_VAL;
 
@@ -164,12 +167,14 @@ hs20FillExtCapIE (
         prExtCap->aucCapabilities[0] &= ~ELEM_EXT_CAP_PSMP_CAP;
     }
 
-    SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_BSS_TRANSITION_BIT);
-    SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_UTC_TSF_OFFSET_BIT);
-    SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_INTERWORKING_BIT);
+    if (prAdapter->prGlueInfo->fgConnectHS20AP == TRUE) {
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_BSS_TRANSITION_BIT);
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_UTC_TSF_OFFSET_BIT);
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_INTERWORKING_BIT);
 
-    // For R2 WNM-Notification
-    SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_WNM_NOTIFICATION_BIT);    
+        /* For R2 WNM-Notification*/
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_WNM_NOTIFICATION_BIT);    
+    }
 
     printk("IE_SIZE(prExtCap) = %d, %d %d\n", IE_SIZE(prExtCap), ELEM_HDR_LEN, ELEM_MAX_LEN_EXT_CAP);
     ASSERT(IE_SIZE(prExtCap) <= (ELEM_HDR_LEN + ELEM_MAX_LEN_EXT_CAP));
@@ -202,18 +207,23 @@ hs20FillProreqExtCapIE(
     prExtCap = (P_EXT_CAP_T)pucIE;
 
     prExtCap->ucId = ELEM_ID_EXTENDED_CAP;
-    prExtCap->ucLength = ELEM_MAX_LEN_EXT_CAP;
+    if (prAdapter->prGlueInfo->fgConnectHS20AP == TRUE)
+        prExtCap->ucLength = ELEM_MAX_LEN_EXT_CAP;
+    else
+        prExtCap->ucLength = 3 - ELEM_HDR_LEN;
 
-    kalMemZero(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP);
+    kalMemZero(prExtCap->aucCapabilities, prExtCap->ucLength);
 
     prExtCap->aucCapabilities[0] = ELEM_EXT_CAP_DEFAULT_VAL;
 
-    SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_BSS_TRANSITION_BIT);
-    SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_UTC_TSF_OFFSET_BIT);
-    SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_INTERWORKING_BIT);
+    if (prAdapter->prGlueInfo->fgConnectHS20AP == TRUE) {
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_BSS_TRANSITION_BIT);
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_UTC_TSF_OFFSET_BIT);
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_INTERWORKING_BIT);
 
-	// For R2 WNM-Notification
-	SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_WNM_NOTIFICATION_BIT);
+        /* For R2 WNM-Notification*/
+        SET_EXT_CAP(prExtCap->aucCapabilities, ELEM_MAX_LEN_EXT_CAP, ELEM_EXT_CAP_WNM_NOTIFICATION_BIT);
+    }
 
 }
 

@@ -65,6 +65,7 @@
 #include <mach/charging.h>
 #include <mach/battery_common.h>
 #include <mach/battery_meter.h>
+#include <mach/battery_meter_hal.h>
 #include "cust_battery_meter.h"
 #include <mach/mt_boot.h>
 #include "mach/mtk_rtc.h"
@@ -105,6 +106,8 @@ kal_bool g_charging_full_reset_bat_meter = KAL_FALSE;
 int g_platform_boot_mode = 0;
 struct timespec g_bat_time_before_sleep;
 int g_smartbook_update = 0;
+//for vegeta-2361
+static int g_previous_uisoc = -1;
 
 #if defined(MTK_TEMPERATURE_RECHARGE_SUPPORT)
 kal_uint32 g_batt_temp_status = TEMP_POS_NORMAL;
@@ -160,6 +163,12 @@ static DECLARE_WAIT_QUEUE_HEAD(charger_hv_detect_waiter);
 static struct hrtimer battery_kthread_timer;
 extern BOOL bat_spm_timeout;
 extern U32 _g_bat_sleep_total_time;
+
+/*fangming.yang added 2014.10.15 16:46 for bug vegeta-1967*/
+static int gfg_dod0_has_changed = 0;
+static int gfg_dod0_has_changed_pre = 0;
+/*end*/
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // FOR ANDROID BATTERY SERVICE
@@ -1202,6 +1211,7 @@ static DEVICE_ATTR(Charging_CallState, 0664, show_Charging_CallState, store_Char
 static void mt_battery_update_EM(struct battery_data *bat_data)
 {
 	bat_data->BAT_CAPACITY = BMT_status.UI_SOC;
+    g_previous_uisoc = BMT_status.UI_SOC;//fangming.yang for vegeta-2361
     bat_data->BAT_TemperatureR=BMT_status.temperatureR;	//API
     bat_data->BAT_TempBattVoltage=BMT_status.temperatureV; // API
     bat_data->BAT_InstatVolt=BMT_status.bat_vol;	//VBAT
@@ -1434,6 +1444,99 @@ static void mt_battery_Sync_UI_Percentage_to_Real(void)
 	}
 }
 
+/********************************************************
+ @Function: battery_capacity_adjustment_terminal
+ @Description: adjust the battery capacity at last software node.
+ @Calls: N/A
+ @Called By: battery_update
+ @Table Accessed: N/A
+ @Table Updated: N/A
+ @Input: kal_int32 omd3/kal_int32 omd4/kal_int32 omd5/kal_int32 gF_DOD0
+ @Output: N/A
+ @Return: void
+ @Others: fangming.yang added 2014.10.15 16:46 for bug VEGETA-1967
+ *******************************************************/
+#define CKT_CUSTOM_METHOD_CORRECT_CAPACITY 1
+#define CKT_CUSTOM_METHOD_CORRECT_CAPACITY_EXT 1
+#define KEEP(x,previous_x)  x = ((x) > (previous_x)?(previous_x):(x))
+
+#define CKT_TUNE_CAPACITY_NUMBER    (oam_d_5 - oam_d_3 + 1)
+extern kal_int32 oam_d0;
+extern kal_int32 oam_d_1;
+extern kal_int32 oam_d_2;
+extern kal_int32 oam_d_3;
+extern kal_int32 oam_d_4;
+extern kal_int32 oam_d_5;
+extern kal_int32 oam_car_1;
+extern kal_int32 oam_car_2;
+
+extern kal_bool gFG_Is_Charging;
+extern kal_int32 gFG_capacity_by_v_init;
+extern kal_int32 gFG_DOD0;
+extern kal_int32 gFG_DOD1;
+extern kal_int32 gFG_columb;
+extern kal_int32 gFG_BATT_CAPACITY_aging;
+extern BATTERY_METER_CONTROL battery_meter_ctrl;
+
+static void battery_capacity_adjustment_terminal(kal_int32 omd3,
+            kal_int32 omd4,
+            kal_int32 omd5,
+            kal_int32 gF_DOD0)
+{
+    kal_bool adjustment_first = KAL_FALSE;
+    kal_int32 tmp = 0;
+    kal_int32 BAT_SOC = 0;
+    int ret = 0;
+
+    if(bat_is_charger_exist() == KAL_FALSE)
+    {
+        if(omd3 < omd5 && omd4 < omd5)
+        {
+           battery_xlog_printk(BAT_LOG_CRTI, "gFG_Is_Charging=(no), adjustment_first=(yes).\n");
+           adjustment_first = KAL_TRUE;
+        }
+    }
+    else
+    {
+        return;
+    }
+    
+    if(adjustment_first == KAL_FALSE)
+    {
+        return;
+    }
+
+TEST_NODE:
+    if(adjustment_first == KAL_TRUE)
+    {
+        /*start to do adjustment for battery capacity.*/
+        battery_xlog_printk(BAT_LOG_CRTI, "adjustment_first=(yes).\n");
+        oam_car_2 = ((gFG_BATT_CAPACITY_aging * CKT_TUNE_CAPACITY_NUMBER)+10)/10;
+
+        oam_car_1 = oam_car_2;
+        gFG_columb = 0;
+
+        //  for plugging out charger in recharge phase, using SOC as UI_SOC
+        if(gfg_dod0_has_changed > gfg_dod0_has_changed_pre && gfg_dod0_has_changed - gfg_dod0_has_changed_pre == 1)
+        {
+            BAT_SOC = BMT_status.SOC;
+        }
+        else
+        {
+            BAT_SOC = BMT_status.UI_SOC;
+        }
+
+        oam_d0 = 100 - BAT_SOC;
+        gFG_DOD0 = oam_d0;
+        gFG_DOD1 = oam_d0;
+        oam_d_1 = oam_d0;
+        oam_d_2 = oam_d0;
+        oam_d_3 = oam_d0;
+        oam_d_4 = oam_d0;
+        oam_d_5 = oam_d0;
+    }
+}
+
 static void battery_update(struct battery_data *bat_data)
 {
     struct power_supply *bat_psy = &bat_data->psy;
@@ -1491,7 +1594,28 @@ static void battery_update(struct battery_data *bat_data)
 		}	
     }
 
-	battery_xlog_printk(BAT_LOG_CRTI, "UI_SOC=(%d), resetBatteryMeter=(%d)\n", BMT_status.UI_SOC,resetBatteryMeter);	
+	battery_xlog_printk(BAT_LOG_CRTI, "CktDebug UI_SOC=(%d), resetBatteryMeter=(%d)\n", BMT_status.UI_SOC,resetBatteryMeter);	
+
+    /*Every time to check if the battery capacity is abnormal,and then correct it*/
+    #if CKT_CUSTOM_METHOD_CORRECT_CAPACITY
+    battery_capacity_adjustment_terminal(oam_d_3,oam_d_4,oam_d_5,gFG_DOD0);
+    #else
+    #endif
+
+    //fangming.yang for vegeta-2361
+    #if CKT_CUSTOM_METHOD_CORRECT_CAPACITY_EXT 
+    if(BMT_status.charger_exist == KAL_FALSE){
+        if(g_previous_uisoc < 0){
+           battery_xlog_printk(BAT_LOG_CRTI, "CktDebugLog g_previous_uisoc poweron.\n");	 
+        }else{
+            battery_xlog_printk(BAT_LOG_CRTI, "CktDebugLog BMT_status.UI_SOC=%d g_previous_uisoc=%d.\n",
+                BMT_status.UI_SOC,g_previous_uisoc);
+            KEEP(BMT_status.UI_SOC,g_previous_uisoc);
+        }
+    }
+    #endif
+
+    battery_xlog_printk(BAT_LOG_CRTI, "CktDebugLog version check.\n");
 
 	// set RTC SOC to 1 to avoid SOC jump in charger boot.
 	if (BMT_status.UI_SOC <= 1) {
@@ -1825,15 +1949,29 @@ void mt_battery_GetBatteryData(void)
 	if(bat_meter_timeout == KAL_TRUE || bat_spm_timeout == TRUE)
 	{
 		SOC = battery_meter_get_battery_percentage();
+        battery_xlog_printk(BAT_LOG_CRTI, "bat_meter_timeout bat_spm_timeout SOC=(%d)\n",SOC);
 		bat_meter_timeout = KAL_FALSE;
 		bat_spm_timeout = FALSE;
+        /*fangming.yang added 2014.10.20 16:46 for bug vegeta-1967*/
+        if(bat_spm_timeout == TRUE && (BMT_status.UI_SOC > SOC))
+        {
+            battery_xlog_printk(BAT_LOG_CRTI, "Force update capacity:BMT_status.UI_SOC = [%d]. SOC = [%d].\n",BMT_status.UI_SOC,SOC);
+            BMT_status.UI_SOC = SOC;
+        }
+        /*end*/
 	}
 	else
 	{
 		if (previous_SOC == -1)
+        {
 			SOC = battery_meter_get_battery_percentage();
+            battery_xlog_printk(BAT_LOG_CRTI, "previous_SOC -1 SOC=(%d)\n",SOC);
+		}
 		else
-			SOC = previous_SOC;		
+		{
+			SOC = previous_SOC;
+            battery_xlog_printk(BAT_LOG_CRTI, "previous_SOC SOC=(%d)\n",SOC);
+		}
 	}
     
 	ZCV = battery_meter_get_battery_zcv();
@@ -2499,9 +2637,14 @@ int bat_thread_kthread(void *x)
     /* Run on a process content */  
     while (1) {               
         mutex_lock(&bat_mutex);
-          
+
 		if((chargin_hw_init_done == KAL_TRUE) && (battery_suspended == KAL_FALSE))
-	        BAT_thread();                      
+        {
+	        BAT_thread();
+		}
+         /*fangming.yang added 2014.10.20 16:46 for bug vegeta-1967*/
+        gfg_dod0_has_changed_pre = gfg_dod0_has_changed;
+         /*end*/
 
         mutex_unlock(&bat_mutex);
     
@@ -2514,10 +2657,14 @@ int bat_thread_kthread(void *x)
         ktime = ktime_set(BAT_TASK_PERIOD, 0);  // 10s, 10* 1000 ms
         if( chr_wake_up_bat == KAL_TRUE && g_smartbook_update != 1)	// for charger plug in/ out
         {
-                g_smartbook_update = 0;
+            g_smartbook_update = 0;
            	battery_meter_reset();
 			chr_wake_up_bat = KAL_FALSE;
-			            
+
+            /*fangming.yang added 2014.10.20 16:46 for bug vegeta-1967*/
+            gfg_dod0_has_changed++;
+            /*end*/
+
             battery_xlog_printk(BAT_LOG_CRTI, "[BATTERY] Charger plug in/out, Call battery_meter_reset. (%d)\n", BMT_status.UI_SOC);
         }
         

@@ -179,6 +179,12 @@ static DEFINE_MUTEX(fwupgrade_mutex);
 atomic_t    upgrading;
 #endif /* CONFIG_SUPPORT_FTS_CTP_UPG */
 
+//************* add for doubletap + psensor ************//
+unsigned short ps_data;
+extern long TMD2772_enable_ps_tp(int value);
+extern long TMD2772_read_ps_tp(u16 *pvalue);
+extern int TMD2772_get_ps_value_tp(u16 value);
+//************* add for doubletap + psensor ************//
 
 int g_v_magnify_x =TPD_VELOCITY_CUSTOM_X;
 int g_v_magnify_y =TPD_VELOCITY_CUSTOM_Y;
@@ -1761,13 +1767,22 @@ static void check_gesture(int gesture_id)
 		case GESTURE_DOUBLECLICK:
 			if(GestrueEnable)
 			{
-			//input_report_key(tpd->dev, KEY_U, 1);
-			input_report_key(tpd->dev, KEY_POWER, 1);
-			input_sync(tpd->dev);
-			//input_report_key(tpd->dev, KEY_U, 0);
-			input_report_key(tpd->dev, KEY_POWER, 0);
-			input_sync(tpd->dev);
-            custom_vibration_enable(50);
+				TMD2772_enable_ps_tp(1);
+				msleep(10);
+				TMD2772_read_ps_tp(&ps_data);                    
+				printk("======== TMD2772: ps_data=%d ========\n",ps_data);
+                   
+				if (ps_data <= 500) {
+					 printk("======== 2. T-T ps open ========\n");	
+					input_report_key(tpd->dev, KEY_POWER, 1);
+					input_sync(tpd->dev);
+					input_report_key(tpd->dev, KEY_POWER, 0);
+					input_sync(tpd->dev);
+					custom_vibration_enable(50);
+				} else {
+					printk("======== 1. T-T ps close ========\n");
+				}
+				TMD2772_enable_ps_tp(0);
 			}
 			break;
 		case GESTURE_O:

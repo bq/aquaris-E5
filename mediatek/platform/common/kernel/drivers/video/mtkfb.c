@@ -2931,6 +2931,7 @@ void mtkfb_clear_lcm(void)
 }
 int hdmi_disc_disp_path(void)
 {
+#if defined(MTK_HDMI_SUPPORT)
     printk("[FB Driver] enter hdmi_disc_disp_path \n");
 
     if (is_early_suspended) {
@@ -2963,13 +2964,17 @@ int hdmi_disc_disp_path(void)
     DISP_CHECK_RET(DISP_PowerEnable(FALSE));
 
     DISP_CHECK_RET(DISP_PauseVsync(TRUE));
+    
     disp_hdmi_path_clock_off("mtkfb");
     printk("[FB Driver] hdmi_disc_disp_path\n");
+#endif
+
 	return 0;
 }
 
 int hdmi_conn_disp_path(void)
 {
+#if defined(MTK_HDMI_SUPPORT)
     printk("[FB Driver] enter hdmi_conn_disp_path\n");
     extern LCM_PARAMS *lcm_params;
  
@@ -3020,7 +3025,7 @@ int hdmi_conn_disp_path(void)
     }
 
     printk("[FB Driver] hdmi_conn_disp_path\n");
-
+#endif
 	return 0;
 }
 

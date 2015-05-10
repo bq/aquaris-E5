@@ -1291,6 +1291,20 @@ void dod_init(void)
     int ret = 0;    
     //use get_hw_ocv-----------------------------------------------------------------        
     ret=battery_meter_ctrl(BATTERY_METER_CMD_GET_HW_OCV, &gFG_voltage);
+
+     /*code added by fangming.yang to resolve VEGETA-1967 bug*/
+    if(bat_is_charger_exist() == KAL_FALSE)
+    {
+        gFG_voltage -= VOLTAGE_INIT_COMPENSATE_NO_CHARGER;
+        bm_print(BM_LOG_CRTI,"[dod_init_comp_inf] gFG_voltage:%d gFG_capacity_by_v:%d\n",gFG_voltage,gFG_capacity_by_v);
+    }
+    else
+    {
+        gFG_voltage -= VOLTAGE_INIT_COMPENSATE_CHARGER;
+        bm_print(BM_LOG_CRTI,"[dod_init_charger_inf] gFG_voltage:%d gFG_capacity_by_v:%d\n",gFG_voltage,gFG_capacity_by_v);
+    }
+    /*code added end 2014.10.08 pm 16:00*/
+    
     gFG_capacity_by_v = fgauge_read_capacity_by_v(gFG_voltage);
     
     bm_print(BM_LOG_CRTI, "[FGADC] get_hw_ocv=%d, HW_SOC=%d, SW_SOC = %d\n", 
@@ -1320,7 +1334,7 @@ void dod_init(void)
     }
     else
     {
-    	if(((g_rtc_fg_soc != 0) && ((gFG_capacity_by_v-g_rtc_fg_soc) < CUST_POWERON_DELTA_CAPACITY_TOLRANCE) &&(( gFG_capacity_by_v > CUST_POWERON_LOW_CAPACITY_TOLRANCE || bat_is_charger_exist() == KAL_TRUE)))
+    	if(((g_rtc_fg_soc != 0) && ((gFG_capacity_by_v-g_rtc_fg_soc) < CUST_POWERON_DELTA_CAPACITY_TOLRANCE_EXT) &&(( gFG_capacity_by_v > CUST_POWERON_LOW_CAPACITY_TOLRANCE || bat_is_charger_exist() == KAL_TRUE)))
 			|| ((g_rtc_fg_soc != 0) &&(g_boot_reason == BR_WDT_BY_PASS_PWK || g_boot_reason == BR_WDT || g_boot_reason == BR_TOOL_BY_PASS_PWK || g_boot_reason == BR_2SEC_REBOOT || g_boot_mode == RECOVERY_BOOT)))
         {
             gFG_capacity_by_v = g_rtc_fg_soc;            
@@ -1401,6 +1415,19 @@ void oam_init(void)
     ret = battery_meter_ctrl(BATTERY_METER_CMD_GET_ADC_V_BAT_SENSE, &vol_bat);
     ret = battery_meter_ctrl(BATTERY_METER_CMD_GET_HW_OCV, &gFG_voltage);
 
+     /*code added by fangming.yang to resolve VEGETA-1967 bug*/
+    if(bat_is_charger_exist() == KAL_FALSE)
+    {
+        gFG_voltage -= VOLTAGE_INIT_COMPENSATE_NO_CHARGER;
+        bm_print(BM_LOG_CRTI,"[oam_init_comp_inf] gFG_voltage:%d vol_bat:%d\n",gFG_voltage,vol_bat);
+    }
+    else
+    {
+        gFG_voltage -= VOLTAGE_INIT_COMPENSATE_CHARGER;
+        bm_print(BM_LOG_CRTI,"[oam_init_charger_inf] gFG_voltage:%d vol_bat:%d\n",gFG_voltage,vol_bat);
+    }
+    /*code added end 2014.10.08 pm 16:00*/
+    
 	gFG_capacity_by_v = fgauge_read_capacity_by_v(gFG_voltage);
 	vbat_capacity = fgauge_read_capacity_by_v(vol_bat);
 	
@@ -1410,14 +1437,27 @@ void oam_init(void)
 
     	// to avoid plug in cable without battery, then plug in battery to make hw soc = 100% 
     	// if the difference bwtween ZCV and vbat is too large, using vbat instead ZCV
+
+        /*code changed by fangming.yang to resolve VEGETA-1967 bug*/
+        #if 0
     	if(((gFG_capacity_by_v == 100) && (vbat_capacity < CUST_POWERON_MAX_VBAT_TOLRANCE)) ||(abs(gFG_capacity_by_v-vbat_capacity)>CUST_POWERON_DELTA_VBAT_TOLRANCE))	
     	{
 			bm_print(BM_LOG_CRTI, "[oam_init] fg_vbat=(%d), vbat=(%d), set fg_vat as vat\n", gFG_voltage,vol_bat);
 			
 			gFG_voltage = vol_bat;
 			gFG_capacity_by_v = vbat_capacity;
-    	}   	
-    }    
+    	}
+        #else
+        if(((gFG_capacity_by_v == 100) && (vbat_capacity < CUST_POWERON_MAX_VBAT_TOLRANCE)))	
+    	{
+			bm_print(BM_LOG_CRTI, "[oam_init] fg_vbat=(%d), vbat=(%d), set fg_vat as vat\n", gFG_voltage,vol_bat);
+			
+			gFG_voltage = vol_bat;
+			gFG_capacity_by_v = vbat_capacity;
+    	}
+        #endif
+         /*code changed end 2014.10.08 pm 16:00*/
+    }
 	
     gFG_capacity_by_v_init = gFG_capacity_by_v;
 
@@ -1438,7 +1478,7 @@ void oam_init(void)
     //oam_r_1 = fgauge_read_r_bat_by_v(vbat);
     oam_r_1 = fgauge_read_r_bat_by_v(gFG_voltage);
     oam_r_2 = oam_r_1;
-        
+
     oam_d0 = gFG_DOD0;
     oam_d_5 = oam_d0;
     oam_i_ori = gFG_current;

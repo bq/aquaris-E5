@@ -28,7 +28,7 @@ production_channel="ubuntu-touch/stable/bq-aquaris.en"
 external_version=""
 internal_version=""
 
-projectandoem="VEGETA01A-S11A_BQ"
+projectandoem="VEGETA01A-S23A_BQ"
 current_langs="100"
 
 # fake a build time for the internal version. first build of the day

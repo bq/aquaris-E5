@@ -19,8 +19,7 @@ TIMEZONE=Europe/Amsterdam
 
 ############usb相关#################
 USB_MANUFACTURER_STRING=$(strip $(CUST_NAME) )
-
-#[CTS TEST] com.android.cts.usb.TestUsbTest#testUsbSerial FAIL 
+#[CTS TEST] com.android.cts.usb.TestUsbTest#testUsbSerial FAIL
 #junit.framework.ComparisonFailure: adb serial != ro.serialno
 #Modity by EminHuang 20140523
 #USB_PRODUCT_STRING=Aquaris_E5_HD
@@ -46,8 +45,8 @@ TESTC = testc_none
 #############################
 
 #如果要固定版本号,请在这设置,否则注释调它,而不是留空!!!
-CKT_BUILD_VERNO = VEGETA01A-S11A_BQ_L41ES_212_140627
-CKT_BUILD_INTERNAL_VERNO =VEGETA01A-S11A_BQ_L41ES_212_140627174900
+CKT_BUILD_VERNO = VEGETA01A-S11A_BQ_L100
+CKT_BUILD_INTERNAL_VERNO =VEGETA01A-S11A_BQ_L100
 
 #############################
 #摄像头软件插值
@@ -93,7 +92,7 @@ CKT_MAKE_ADB_DEVICES_NAME_TO_RANDOM=no
 export CKT_MAKE_ADB_DEVICES_NAME_TO_RANDOM
 
 #ckt helin 20131210 add FlashLight apk to System
-CKT_APP_FLASHLIGHT = no #wangmin open flashlight
+CKT_APP_FLASHLIGHT = no
 export CKT_APP_FLASHLIGHT
 
 

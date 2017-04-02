@@ -14,7 +14,7 @@
 #include <mach/mt_pm_ldo.h>
 #include <mach/mt_typedefs.h>
 #include <mach/mt_boot.h>
-//#include <hardware_legacy/vibrator.h>
+
 #include <cust_vibrator.h>
 #include "cust_gpio_usage.h"
 #define FTS_GESTRUE
@@ -792,7 +792,8 @@ static unsigned char CTPM_FW[]=
 #elif defined(KRILLIN)
 static unsigned char CTPM_FW[]=
 {
-#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x15_20140618_app.i"
+//#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x15_20140618_app.i"
+#include "FT5336_HiKe_Krilin_OGS_540X960_Truly0x5a_Ver0x40_20140814_app.i"
 };
 #endif
 
@@ -828,7 +829,7 @@ static unsigned char CTPM_FW2[]=
 static unsigned char CTPM_FW2[]=
 {
 /* TianMa lcm used LaiBao tpd */
-#include "FT5336_Hike_Krilin_540X960_LaiBao0x55_Ver0x12_20140729_app.i"
+#include "FT5336_Hike_Krilin_540X960_LaiBao0x55_Ver0x13_20140813_app.i"
 };
 #endif
 static int compat_fw_ver = 0xff;
@@ -900,7 +901,7 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 		
 		 /*write 0x55 to register 0xfc*/
 		ft5x0x_write_reg(0xfc, 0x55);   
-		msleep(30);   
+		msleep(30);
 
 
 
@@ -923,8 +924,8 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 		goto ERR;
 	}
 	printk("<suyong> <%d>,%s(),Step 2:Enter upgrade mode\n",__LINE__,__func__ );
-	
-    /*********Step 3:check READ-ID***********************/        
+
+    /*********Step 3:check READ-ID***********************/
     cmd_write(0x90,0x00,0x00,0x00,4);
 	i=0;
 	i_ret=0;
@@ -940,15 +941,13 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 		goto ERR;
 	}
 
-	printk("<suyong> <%d>,%s(),%x  %x\n",__LINE__,__func__,reg_val[0],reg_val[1] );
-        //printk("[TSP] Step 2: CTPM ID,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+	// printk("<suyong> <%d>,%s(),%x  %x\n",__LINE__,__func__,reg_val[0],reg_val[1] );
+    //printk("[TSP] Step 2: CTPM ID,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
 	auc_i2c_write_buf[0] = 0xcd;
 	cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
 	byte_read(reg_val,1);
 
 
-
-//   ft5206_i2c_Read(i2c_client, auc_i2c_write_buf, 1, reg_val, 1);
 
 	/*********0705 mshl ********************/
 	/*if (reg_val[0] > 4)
@@ -965,15 +964,9 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 	{
 		is_5336_new_bootloader = BL_VERSION_GZF ;
 	}
-	printk("<suyong> <%d>,%s(),reg_val[0]=%d is_5336_new_bootloader=%d\n",__LINE__,__func__,reg_val[0],is_5336_new_bootloader );
-	printk("<suyong> <%d>,%s(),Step 3:check READ-ID\n",__LINE__,__func__ );
 
-//	printk("<TSP> <%d>,%s(),is_5336_new_bootloader=%d  0x%x\n",__LINE__,__func__ ,is_5336_new_bootloader,reg_val[0]);
-
-     /*********Step 4:erase app*******************************/
-	 /*********Step 4:erase app and panel paramenter area ********************/
+     /*********Step 4:erase app and panel paramenter area ********************/
 	if(is_5336_fwsize_30)
-//	if (0)
 	{
 		auc_i2c_write_buf[0] = 0x61;
 // 苏 勇 2014年01月15日 14:15:43		i2c_master_send(i2c_client, auc_i2c_write_buf, 1); /*erase app area*/	
@@ -990,15 +983,11 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 	else
 	{
 		auc_i2c_write_buf[0] = 0x61;
-// 苏 勇 2014年01月15日 14:15:55		i2c_master_send(i2c_client, auc_i2c_write_buf, 1); /*erase app area*/	
 		cmd_write(auc_i2c_write_buf[0],0x00,0x00,0x00,1);
 		delay_qt_ms(4000);
 
 	}
-	printk("<suyong> <%d>,%s(),Step 4: erase\n",__LINE__,__func__ );
-  
-    
-    //printk("[TSP] Step 4: erase.ret=%d\n",ret);
+	printk("[TSP] step 4 end\n");
 
     /*********Step 5:write firmware(FW) to ctpm flash*********/
     bt_ecc = 0;
@@ -1035,7 +1024,7 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 			printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
 			goto ERR;
 		}
-              //printk("[TSP] 111 ret 0x%x \n", ret);
+        //printk("[TSP] 111 ret 0x%x \n", ret);
         //delay_qt_ms(FTS_PACKET_LENGTH/6 + 1);
         if ((j * FTS_PACKET_LENGTH % 1024) == 0)
         {
@@ -1090,7 +1079,7 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 	        packet_buf[5] = (FTS_BYTE)temp;
 	        packet_buf[6] = pbt_buf[ dw_lenth + i]; 
 	        bt_ecc ^= packet_buf[6];
-	        ret =CTPDMA_i2c_write(0x70,&packet_buf[0],7);  
+	        ret =CTPDMA_i2c_write(0x70,&packet_buf[0],7);
 			if(ret <0)
 			{
 				printk("<suyong> <%d>,%s(),ret=%d\n",__LINE__,__func__,ret );
@@ -1131,20 +1120,19 @@ static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_le
 		}
 	}
 	printk("<suyong> <%d>,%s(),write firmware(FW)\n",__LINE__,__func__ );
-	
-    /*********Step 6: read out checksum***********************/
-    /*send the opration head*/
+
+	/*********Step 6: read out checksum***********************/
+	/*send the opration head*/
     //cmd_write(0xcc,0x00,0x00,0x00,1);
     //byte_read(reg_val,1);
-i2c_smbus_read_i2c_block_data(ft5336_i2c_client, 0xcc, 1, &(reg_val[0]));
+    i2c_smbus_read_i2c_block_data(ft5336_i2c_client, 0xcc, 1, &(reg_val[0]));
 	printk("<suyong> <%d>,%s(),ecc read 0x%x, new firmware 0x%x\n",__LINE__,__func__ ,reg_val[0], bt_ecc);
-    //printk("[TSP] Step 6:  ecc read 0x%x, new firmware 0x%x. \n", reg_val[0], bt_ecc);
-    if(reg_val[0] != bt_ecc)
-    {
+	if(reg_val[0] != bt_ecc)
+	{
         //return ERR_ECC;
         ret=-1;
         goto ERR;
-    }
+	}
 	printk("<suyong> <%d>,%s(),Step 6: read out checksum\n",__LINE__,__func__ );
 
     /*********Step 7: reset the new FW***********************/
@@ -1159,7 +1147,7 @@ i2c_smbus_read_i2c_block_data(ft5336_i2c_client, 0xcc, 1, &(reg_val[0]));
 	ret=0;
 	printk("<suyong> <%d>,%s(),reset the new FW\n",__LINE__,__func__ );
 ERR:
-	mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); 
+	mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM);
 	mutex_unlock(&fwupgrade_mutex);
 	atomic_set(&upgrading, 0);
     return ret;
@@ -1215,7 +1203,7 @@ E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_lenth)
 		ret =-1;
 		goto ERR;
 	}
-    /*********Step 3:check READ-ID***********************/        
+    /*********Step 3:check READ-ID***********************/
     cmd_write(0x90,0x00,0x00,0x00,4);
 	i=0;
 	i_ret=0;
@@ -1596,12 +1584,12 @@ static  void tpd_down(int x, int y, int p) {
  
 static  void tpd_up(int x, int y,int *count) {
 	 //if(*count>0) {
-	 	#ifdef FTS_PRESSURE
-		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
-		input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 0);
-		#else
-		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
-		#endif
+//	 	#ifdef FTS_PRESSURE
+//		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
+//		input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 0);
+//		#else
+//		input_report_abs(tpd->dev, ABS_MT_PRESSURE, 0);
+//		#endif
 		 input_report_key(tpd->dev, BTN_TOUCH, 0);
 		 //input_report_abs(tpd->dev, ABS_MT_TOUCH_MAJOR, 0);
 		 //input_report_abs(tpd->dev, ABS_MT_POSITION_X, x);
@@ -1767,22 +1755,13 @@ static void check_gesture(int gesture_id)
 		case GESTURE_DOUBLECLICK:
 			if(GestrueEnable)
 			{
-				TMD2772_enable_ps_tp(1);
-				msleep(10);
-				TMD2772_read_ps_tp(&ps_data);                    
-				printk("======== TMD2772: ps_data=%d ========\n",ps_data);
-                   
-				if (ps_data <= 500) {
-					 printk("======== 2. T-T ps open ========\n");	
-					input_report_key(tpd->dev, KEY_POWER, 1);
-					input_sync(tpd->dev);
-					input_report_key(tpd->dev, KEY_POWER, 0);
-					input_sync(tpd->dev);
-					custom_vibration_enable(50);
-				} else {
-					printk("======== 1. T-T ps close ========\n");
-				}
-				TMD2772_enable_ps_tp(0);
+			//input_report_key(tpd->dev, KEY_U, 1);
+			input_report_key(tpd->dev, KEY_POWER, 1);
+			input_sync(tpd->dev);
+			//input_report_key(tpd->dev, KEY_U, 0);
+			input_report_key(tpd->dev, KEY_POWER, 0);
+			input_sync(tpd->dev);
+            custom_vibration_enable(50);
 			}
 			break;
 		case GESTURE_O:
@@ -1936,15 +1915,15 @@ static int ft5x0x_read_Touchdata(void)
 
 		 
 
-		  if (tpd_touchinfo(&cinfo, &pinfo)) 
-		  {
+          if (tpd_touchinfo(&cinfo, &pinfo))
+          {
 		    //TPD_DEBUG("point_num = %d\n",point_num);
 			TPD_DEBUG_SET_TIME;
 
 
             if(point_num >0) 
-		{
-			int i=0;
+		    {
+			    int i=0;
 		     	for (i=0;i<point_num;i++)
 		     	{
 					//tpd_down(cinfo.x[i], cinfo.y[i], i+1);

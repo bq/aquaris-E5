@@ -600,6 +600,7 @@ static void nested_release_page_clean(struct page *page)
 	kvm_release_page_clean(page);
 }
 
+static unsigned long nested_ept_get_cr3(struct kvm_vcpu *vcpu);
 static u64 construct_eptp(unsigned long root_hpa);
 static void kvm_cpu_vmxon(u64 addr);
 static void kvm_cpu_vmxoff(void);
@@ -1890,6 +1891,7 @@ static u32 nested_vmx_secondary_ctls_low, nested_vmx_secondary_ctls_high;
 static u32 nested_vmx_pinbased_ctls_low, nested_vmx_pinbased_ctls_high;
 static u32 nested_vmx_exit_ctls_low, nested_vmx_exit_ctls_high;
 static u32 nested_vmx_entry_ctls_low, nested_vmx_entry_ctls_high;
+static u32 nested_vmx_ept_caps;
 static __init void nested_vmx_setup_ctls_msrs(void)
 {
 	/*
@@ -4539,7 +4541,7 @@ static int handle_wrmsr(struct kvm_vcpu *vcpu)
 	u64 data = (vcpu->arch.regs[VCPU_REGS_RAX] & -1u)
 		| ((u64)(vcpu->arch.regs[VCPU_REGS_RDX] & -1u) << 32);
 
-	if (vmx_set_msr(vcpu, ecx, data) != 0) {
+	if (kmx_set_msr(vcpu, ecx, data) != 0) {
 		trace_kvm_msr_write_ex(ecx, data);
 		kvm_inject_gp(vcpu, 0);
 		return 1;
@@ -5557,6 +5559,80 @@ static int handle_vmptrst(struct kvm_vcpu *vcpu)
 	return 1;
 }
 
+/* Emulate the INVEPT instruction */
+static int handle_invept(struct kvm_vcpu *vcpu)
+{
+	u32 vmx_instruction_info, types;
+	unsigned long type;
+	gva_t gva;
+	struct x86_exception e;
+	struct {
+		u64 eptp, gpa;
+	} operand;
+	u64 eptp_mask = ((1ull << 51) - 1) & PAGE_MASK;
+
+	if (!(nested_vmx_secondary_ctls_high & SECONDARY_EXEC_ENABLE_EPT) ||
+	    !(nested_vmx_ept_caps & VMX_EPT_INVEPT_BIT)) {
+		kvm_queue_exception(vcpu, UD_VECTOR);
+		return 1;
+	}
+
+	if (!nested_vmx_check_permission(vcpu))
+		return 1;
+
+	if (!kvm_read_cr0_bits(vcpu, X86_CR0_PE)) {
+		kvm_queue_exception(vcpu, UD_VECTOR);
+		return 1;
+	}
+
+	vmx_instruction_info = vmcs_read32(VMX_INSTRUCTION_INFO);
+	type = kvm_register_read(vcpu, (vmx_instruction_info >> 28) & 0xf);
+
+	types = (nested_vmx_ept_caps >> VMX_EPT_EXTENT_SHIFT) & 6;
+
+	if (!(types & (1UL << type))) {
+		nested_vmx_failValid(vcpu,
+				VMXERR_INVALID_OPERAND_TO_INVEPT_INVVPID);
+		return 1;
+	}
+
+	/* According to the Intel VMX instruction reference, the memory
+	 * operand is read even if it isn't needed (e.g., for type==global)
+	 */
+	if (get_vmx_mem_address(vcpu, vmcs_readl(EXIT_QUALIFICATION),
+			vmx_instruction_info, &gva))
+		return 1;
+	if (kvm_read_guest_virt(&vcpu->arch.emulate_ctxt, gva, &operand,
+				sizeof(operand), &e)) {
+		kvm_inject_page_fault(vcpu, &e);
+		return 1;
+	}
+
+	switch (type) {
+	case VMX_EPT_EXTENT_CONTEXT:
+		if ((operand.eptp & eptp_mask) !=
+				(nested_ept_get_cr3(vcpu) & eptp_mask))
+			break;
+	case VMX_EPT_EXTENT_GLOBAL:
+		kvm_mmu_sync_roots(vcpu);
+		kvm_mmu_flush_tlb(vcpu);
+		nested_vmx_succeed(vcpu);
+		break;
+	default:
+		BUG_ON(1);
+		break;
+	}
+
+	skip_emulated_instruction(vcpu);
+	return 1;
+}
+
+static int handle_invvpid(struct kvm_vcpu *vcpu)
+{
+	kvm_queue_exception(vcpu, UD_VECTOR);
+	return 1;
+}
+
 /*
  * The exit handlers return 1 if the exit was handled fully and guest execution
  * may resume.  Otherwise they set the kvm_run parameter to indicate what needs
@@ -5599,6 +5675,8 @@ static int (*kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = {
 	[EXIT_REASON_PAUSE_INSTRUCTION]       = handle_pause,
 	[EXIT_REASON_MWAIT_INSTRUCTION]	      = handle_invalid_op,
 	[EXIT_REASON_MONITOR_INSTRUCTION]     = handle_invalid_op,
+	[EXIT_REASON_INVEPT]                  = handle_invept,
+	[EXIT_REASON_INVVPID]                 = handle_invvpid,
 };
 
 static const int kvm_vmx_max_exit_handlers =
@@ -5783,6 +5861,7 @@ static bool nested_vmx_exit_handled(struct kvm_vcpu *vcpu)
 	case EXIT_REASON_VMPTRST: case EXIT_REASON_VMREAD:
 	case EXIT_REASON_VMRESUME: case EXIT_REASON_VMWRITE:
 	case EXIT_REASON_VMOFF: case EXIT_REASON_VMON:
+	case EXIT_REASON_INVEPT: case EXIT_REASON_INVVPID:
 		/*
 		 * VMX instructions trap unconditionally. This allows L1 to
 		 * emulate them for its L2 guest, i.e., allows 3-level nesting!

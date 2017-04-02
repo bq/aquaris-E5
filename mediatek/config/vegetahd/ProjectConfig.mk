@@ -253,7 +253,7 @@ HAVE_SRSAUDIOEFFECT_FEATURE=no
 HAVE_VORBISENC_FEATURE=yes
 
 # It decide whether the system has XLOG mechanism. XLOG is a log filter mechanism which can filter the logs by tag before they are written to log buffer
-HAVE_XLOG_FEATURE=yes
+HAVE_XLOG_FEATURE=no
 HW_HAVE_TP_THREAD=no
 IS_VCORE_USE_6333VCORE=no
 IS_VM_USE_6333VM=no
@@ -291,7 +291,7 @@ MTK_3GDONGLE_SUPPORT=no
 
 # yes: enable this feature
 # no: disable this feature
-MTK_AAL_SUPPORT=yes
+MTK_AAL_SUPPORT=no
 
 # For ACMT DEUG use
 MTK_ACMT_DEBUG=no
@@ -1615,7 +1615,7 @@ MTK_WLAN_SUPPORT=yes
 #CREATE_PROJECT_INFO=2014021914321
 #MTK_BUILD_VERNO = ALPS.KK1.MP1.V2.10
 # ckt zhangyan 20140326 add begin
-BQ_PRODUCT_MODEL = Aquaris E5 HD
+BQ_PRODUCT_MODEL = Aquaris E5 HD Ubuntu Edition
 BQ_PRODUCT_BRAND = bq
 BQ_PRODUCT_NAME = Aquaris_E5_HD
 BQ_TARGET_DEVICE = Aquaris_E5_HD

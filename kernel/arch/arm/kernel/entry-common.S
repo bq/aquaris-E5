@@ -95,9 +95,9 @@ ENTRY(ret_from_fork)
 	mov	why, #1
 	tst	r1, #_TIF_SYSCALL_WORK		@ are we tracing syscalls?
 	beq	ret_slow_syscall
-	mov	r1, sp
-	mov	r0, #1				@ trace exit [IP = 1]
-	bl	syscall_trace
+	mov	r1, scno
+	mov	r0, sp
+	bl	syscall_trace_exit
 	b	ret_slow_syscall
 ENDPROC(ret_from_fork)
 
@@ -442,16 +442,6 @@ ENTRY(vector_swi)
 	ldr	r10, [tsk, #TI_FLAGS]		@ check for syscall tracing
 	stmdb	sp!, {r4, r5}			@ push fifth and sixth args
 
-#ifdef CONFIG_SECCOMP
-	tst	r10, #_TIF_SECCOMP
-	beq	1f
-	mov	r0, scno
-	bl	__secure_computing	
-	add	r0, sp, #S_R0 + S_OFF		@ pointer to regs
-	ldmia	r0, {r0 - r3}			@ have to reload r0 - r3
-1:
-#endif
-
 	tst	r10, #_TIF_SYSCALL_WORK		@ are we tracing syscalls?
 	bne	__sys_trace
 
@@ -472,10 +462,9 @@ ENDPROC(vector_swi)
 	 * context switches, and waiting for our parent to respond.
 	 */
 __sys_trace:
-	mov	r2, scno
-	add	r1, sp, #S_OFF
-	mov	r0, #0				@ trace entry [IP = 0]
-	bl	syscall_trace
+	mov	r1, scno
+	add	r0, sp, #S_OFF
+	bl	syscall_trace_enter
 
 	adr	lr, BSYM(__sys_trace_return)	@ return address
 	mov	scno, r0			@ syscall number (possibly new)
@@ -483,14 +472,16 @@ __sys_trace:
 	cmp	scno, #NR_syscalls		@ check upper syscall limit
 	ldmccia	r1, {r0 - r3}			@ have to reload r0 - r3
 	ldrcc	pc, [tbl, scno, lsl #2]		@ call sys_* routine
-	b	2b
+	cmp	scno, #-1			@ skip the syscall?
+	bne	2b
+	add	sp, sp, #S_OFF			@ restore stack
+	b	ret_slow_syscall
 
 __sys_trace_return:
 	str	r0, [sp, #S_R0 + S_OFF]!	@ save returned r0
-	mov	r2, scno
-	mov	r1, sp
-	mov	r0, #1				@ trace exit [IP = 1]
-	bl	syscall_trace
+	mov	r1, scno
+	mov	r0, sp
+	bl	syscall_trace_exit
 	b	ret_slow_syscall
 
 	.align	5

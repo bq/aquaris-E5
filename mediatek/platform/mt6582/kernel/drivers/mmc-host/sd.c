@@ -258,7 +258,7 @@ bool hwPowerOn_fpga(void){
     sdr_write16(PWR_GPIO, (l_val | PWR_MASK_VOL_33 | PWR_MASK_EN | PWR_GPIO_L4_DIR));
 
     l_val = sdr_read16(PWR_GPIO);
-    printk("[%s]: pwr gpio = 0x%x\n", __func__, l_val);
+    pr_debug("[%s]: pwr gpio = 0x%x\n", __func__, l_val);
     return true;
 }
 
@@ -271,7 +271,7 @@ bool hwPowerSwitch_fpga(void){
     sdr_write16(PWR_GPIO, (l_val | PWR_MASK_VOL_18));
 
     l_val = sdr_read16(PWR_GPIO);
-    printk("[%s]: pwr gpio = 0x%x\n", __func__, l_val);
+    pr_debug("[%s]: pwr gpio = 0x%x\n", __func__, l_val);
     return true;
 }
 
@@ -282,7 +282,7 @@ bool hwPowerDown_fpga(void){
     sdr_write8(PWR_GPIO, (l_val & PWR_MASK_VOL_33_MASK & PWR_MASK_EN_MASK));
 
     l_val = sdr_read16(PWR_GPIO);
-    printk("[%s]: pwr gpio = 0x%x\n", __func__, l_val);
+    pr_debug("[%s]: pwr gpio = 0x%x\n", __func__, l_val);
     return true;
 }
 #endif
@@ -1023,7 +1023,7 @@ static u32 msdc_ldo_power(u32 on, MT65XX_POWER powerId, MT65XX_POWER_VOLTAGE pow
 {
     if (on) { // want to power on
         if (*status == 0) {  // can power on
-            printk(KERN_WARNING "msdc LDO<%d> power on<%d>\n", powerId, powerVolt);
+            pr_debug("msdc LDO<%d> power on<%d>\n", powerId, powerVolt);
             hwPowerOn(powerId, powerVolt, "msdc");
             *status = powerVolt;
         } else if (*status == powerVolt) {
@@ -1036,7 +1036,7 @@ static u32 msdc_ldo_power(u32 on, MT65XX_POWER powerId, MT65XX_POWER_VOLTAGE pow
         }
     } else {  // want to power off
         if (*status != 0) {  // has been powerred on
-            printk(KERN_WARNING "msdc LDO<%d> power off\n", powerId);
+            pr_debug("msdc LDO<%d> power off\n", powerId);
             hwPowerDown(powerId, "msdc");
             *status = 0;
         } else {
@@ -2226,7 +2226,8 @@ static void msdc_set_mclk(struct msdc_host *host, int ddr, u32 hz)
     //u8  clksrc = hw->clk_src;
 
     if (!hz) { // set mmc system clock to 0
-        printk(KERN_ERR "msdc%d -> set mclk to 0",host->id);  // fix me: need to set to 0
+        /* When suspending this is not necessarily an issue, and expect (why it's pr_debug) */
+        pr_debug("msdc%d -> set mclk to 0",host->id);  // fix me: need to set to 0
         if (is_card_sdio(host) || (host->hw->flags & MSDC_SDIO_IRQ)) {
             host->saved_para.hz = hz;
 #ifdef SDIO_ERROR_BYPASS
@@ -2239,7 +2240,7 @@ static void msdc_set_mclk(struct msdc_host *host, int ddr, u32 hz)
     }
     if(host->hw->host_function == MSDC_SDIO && hz >= 100*1000*1000 && sdio_autok_processed == 0)
         hz = 50*1000*1000;
-    printk("[%s] hz = %d\n", __func__, hz);
+    pr_debug("[%s] hz = %d\n", __func__, hz);
 
     if((host->hw->flags & MSDC_SDIO_IRQ) && (hz > 25000000)){
         hz = hz/2;
@@ -2292,10 +2293,10 @@ static void msdc_set_mclk(struct msdc_host *host, int ddr, u32 hz)
 
     //printk(KERN_ERR "================");
     if(hz >= 25000000)
-        printk(KERN_ERR "msdc%d -> !!! Set<%dKHz> Source<%dKHz> -> sclk<%dKHz> DDR<%d> mode<%d> div<%d>" ,
+        pr_debug("msdc%d -> !!! Set<%dKHz> Source<%dKHz> -> sclk<%dKHz> DDR<%d> mode<%d> div<%d>" ,
                         host->id, hz/1000, hclk/1000, sclk/1000, ddr, mode, div);
     else
-        printk(KERN_WARNING "msdc%d -> !!! Set<%dKHz> Source<%dKHz> -> sclk<%dKHz> DDR<%d> mode<%d> div<%d>" ,
+        pr_debug("msdc%d -> !!! Set<%dKHz> Source<%dKHz> -> sclk<%dKHz> DDR<%d> mode<%d> div<%d>" ,
                         host->id, hz/1000, hclk/1000, sclk/1000, ddr, mode, div);
 
     //printk(KERN_ERR "================");
@@ -2468,9 +2469,6 @@ static void msdc_send_stop(struct msdc_host *host)
 
     err = msdc_do_command(host, &stop, 0, CMD_TIMEOUT);
 }
-
-extern void mmc_detach_bus(struct mmc_host *host);
-extern void mmc_power_off(struct mmc_host *host);
 
 int msdc_reinit(struct msdc_host *host)
 {
@@ -3149,7 +3147,7 @@ static void msdc_pm(pm_message_t state, void *data)
 		atomic_set(&host->ot_work.autok_done, 0);
 #endif
 
-        printk(KERN_ERR "msdc%d -> %s Suspend",host->id, evt == PM_EVENT_SUSPEND ? "PM" : "USR");
+        pr_debug("msdc%d -> %s Suspend",host->id, evt == PM_EVENT_SUSPEND ? "PM" : "USR");
         if(host->hw->flags & MSDC_SYS_SUSPEND){ /* set for card */
 //#ifdef MTK_EMMC_SUPPORT
             //msdc_emmc_sleepawake(host, 0);
@@ -3205,7 +3203,7 @@ static void msdc_pm(pm_message_t state, void *data)
         host->suspend = 0;
         host->pm_state = state;
 
-        printk(KERN_ERR "msdc%d -> %s Resume",host->id,evt == PM_EVENT_RESUME ? "PM" : "USR");
+        pr_debug("msdc%d -> %s Resume",host->id,evt == PM_EVENT_RESUME ? "PM" : "USR");
 
         if(host->hw->flags & MSDC_SYS_SUSPEND) { /* will not set for WIFI */
 //#ifdef MTK_EMMC_SUPPORT
@@ -3305,9 +3303,9 @@ static struct excel_info* msdc_reserve_part_info(unsigned char* name)
 
     /* find reserve partition */
     for (i = 0; i < PART_NUM; i++) {
-        printk("name = %s\n", PartInfo[i].name);  //====================debug
+        pr_debug("name = %s\n", PartInfo[i].name);  //====================debug
         if (0 == strcmp(name, PartInfo[i].name)){
-            printk("size = %llu\n", PartInfo[i].size);//=======================debug
+            pr_debug("size = %llu\n", PartInfo[i].size);//=======================debug
             return &PartInfo[i];
         }
     }
@@ -3363,7 +3361,7 @@ int msdc_get_reserve(void)
 
     l_mtk_reserve = (unsigned int)(lp_excel_info->start_address & 0xFFFFUL) << 8; /* unit is 512B */
 
-    printk("mtk reserve: start address = %llu\n", lp_excel_info->start_address); //============================debug
+    pr_debug("mtk reserve: start address = %llu\n", lp_excel_info->start_address); //============================debug
 #ifdef MTK_EMMC_SUPPORT_OTP
     lp_excel_info = msdc_reserve_part_info("otp");
     if (NULL == lp_excel_info) {
@@ -3373,11 +3371,11 @@ int msdc_get_reserve(void)
 
     l_otp_reserve = (unsigned int)(lp_excel_info->start_address & 0xFFFFUL) << 8; /* unit is 512B */
 
-    printk("otp reserve: start address = %llu\n", lp_excel_info->start_address);//========================debug
+    pr_debug("otp reserve: start address = %llu\n", lp_excel_info->start_address);//========================debug
     l_otp_reserve -= l_mtk_reserve;  /* the size info stored with total reserved size */
 #endif
 
-    printk("total reserve: l_otp_reserve = 0x%x blocks, l_mtk_reserve = 0x%x blocks, l_offset = 0x%x blocks\n",
+    pr_debug("total reserve: l_otp_reserve = 0x%x blocks, l_mtk_reserve = 0x%x blocks, l_offset = 0x%x blocks\n",
              l_otp_reserve, l_mtk_reserve, l_offset);
 
     return (l_offset + l_otp_reserve + l_mtk_reserve);
@@ -3461,7 +3459,7 @@ static unsigned int msdc_command_start(struct msdc_host   *host,
     }else if (opcode == MMC_SELECT_CARD) {
         resp = (cmd->arg != 0) ? RESP_R1B : RESP_NONE;
         host->app_cmd_arg = cmd->arg;
-        printk(KERN_WARNING "msdc%d select card<0x%.8x>", host->id,cmd->arg);  // select and de-select
+        pr_debug("msdc%d select card<0x%.8x>", host->id,cmd->arg);  // select and de-select
     } else if (opcode == SD_IO_RW_DIRECT || opcode == SD_IO_RW_EXTENDED){
         resp = RESP_R1; /* SDIO workaround. */
     }else if (opcode == SD_SEND_IF_COND && (mmc_cmd_type(cmd) == MMC_CMD_BCR)){
@@ -4284,7 +4282,6 @@ static void msdc_dma_start(struct msdc_host *host)
     /* handle autocmd12 error in msdc_irq */
     if(host->autocmd & MSDC_AUTOCMD12)
         wints |= MSDC_INT_ACMDCRCERR | MSDC_INT_ACMDTMO | MSDC_INT_ACMDRDY;
-
     sdr_set_field(MSDC_DMA_CTRL, MSDC_DMA_CTRL_START, 1);
     mb();
     if (host->hw->flags & MSDC_SDIO_IRQ)
@@ -4482,7 +4479,7 @@ static int msdc_dma_config(struct msdc_host *host, struct msdc_dma *dma)
             for (j = 0; j < bdlen; j++) {
 #ifdef MSDC_DMA_VIOLATION_DEBUG
                 if (g_dma_debug[host->id] && (msdc_latest_operation_type[host->id] == OPER_TYPE_READ)){
-                    printk("[%s] msdc%d do write 0x10000\n", __func__, host->id);
+                    pr_debug("[%s] msdc%d do write 0x10000\n", __func__, host->id);
                     dma_address = 0x10000;
                 } else{
                     dma_address = sg_dma_address(sg);
@@ -7884,7 +7881,7 @@ if (host->hw->flags & MSDC_SDIO_IRQ)
            int_sdio_irq_enable = enable;
            if (!u_sdio_irq_counter)
            {
-               printk("msdc2 u_sdio_irq_counter=1 \n");
+               pr_debug("msdc2 u_sdio_irq_counter=1 \n");
            }
 
            if (u_sdio_irq_counter < 0xFFFF)
@@ -7893,7 +7890,7 @@ if (host->hw->flags & MSDC_SDIO_IRQ)
                u_sdio_irq_counter = 1;
 
            if (u_sdio_irq_counter <7)
-               printk("msdc2 sdio_irq enable: %d \n",int_sdio_irq_enable);
+               pr_debug("msdc2 sdio_irq enable: %d \n",int_sdio_irq_enable);
 
            //ERR_MSG("Ahsin int_sdio_irq_enable=%d  u_sdio_irq_counter=%d",int_sdio_irq_enable,u_sdio_irq_counter);
        }
@@ -8228,7 +8225,7 @@ static irqreturn_t msdc_irq(int irq, void *dev_id)
         {
             if (!u_msdc_irq_counter)
             {
-                printk("msdc2 u_msdc_irq_counter=1 \n");
+                pr_debug("msdc2 u_msdc_irq_counter=1 \n");
             }
             if (u_msdc_irq_counter <0xFFFF)
                 u_msdc_irq_counter = u_msdc_irq_counter + 1;
@@ -8791,7 +8788,7 @@ static int emmc_read_proc (char *page, char **start, off_t off, int count,
         }
     }
     disk_part_iter_exit(&piter);
-    printk("%s: %s \n", __func__, page);
+    pr_debug("%s: %s \n", __func__, page);
     *eof = 1;
 
 done:
@@ -9010,7 +9007,7 @@ void SRC_trigger_signal(int i_on)
             {
                 mmc_signal_sdio_irq(ghost->mmc);
                 if (u_msdc_irq_counter<3)
-                    printk("msdc2 SRC_trigger_signal mmc_signal_sdio_irq \n");
+                    pr_debug("msdc2 SRC_trigger_signal mmc_signal_sdio_irq \n");
             }
             //printk("msdc2 SRC_trigger_signal ghost->id=%d\n",ghost->id);
         }
